@@ -1,0 +1,34 @@
+#!/bin/sh
+ABSPATH=$0
+CWD=`dirname ${ABSPATH}`
+AMEBA_TOOLDIR=${CWD}/../../tools
+CROSS_COMPILE=arm-none-eabi-
+NM=${CROSS_COMPILE}nm
+OBJDUMP=${CROSS_COMPILE}objdump
+STRIP=${CROSS_COMPILE}strip
+OBJCOPY=${CROSS_COMPILE}objcopy
+#PAD=${AMEBA_TOOLDIR}/padding
+
+APPIMG=${1%%.elf}
+POSTFIX="stage-2"
+DIR_IMAGE=`dirname $1`
+SECTIONS_RAM="-j .image2.table -j .text -j .data"
+SECTIONS_DRAM="-j .sdr_text -j .sdr_rodata"
+
+#For mac os, use the padded ram_1_mac.p.bin 
+cp ${CWD}/../../bsp/image/ram_1_mac.p.bin ${DIR_IMAGE}/ram_1.p.bin
+
+RAM1_BIN=${DIR_IMAGE}/ram_1.p.bin
+RAM2_BIN=${APPIMG}-ram-${POSTFIX}.bin
+RAM3_BIN=${APPIMG}-dram-${POSTFIX}.bin
+BUILDBIN=${CWD}/../../prepend_header.sh
+
+
+#${PAD} 44k 0xFF ${DIR_IMAGE}/ram_1.p.bin
+${NM} ${APPIMG}.elf | sort > ${APPIMG}-${POSTFIX}.map
+${STRIP} -o ${APPIMG}-${POSTFIX}.elf ${APPIMG}.elf
+${OBJCOPY}  ${SECTIONS_RAM} -Obinary ${APPIMG}-${POSTFIX}.elf ${RAM2_BIN}
+${OBJCOPY}  ${SECTIONS_DRAM} -Obinary ${APPIMG}-${POSTFIX}.elf ${RAM3_BIN}
+${BUILDBIN} ${RAM2_BIN} __image2_start__ ${APPIMG}-${POSTFIX}.map
+${BUILDBIN} ${RAM3_BIN} __image3_start__ ${APPIMG}-${POSTFIX}.map
+cat ${RAM1_BIN} ${APPIMG}-ram-${POSTFIX}_prepend.bin ${APPIMG}-dram-${POSTFIX}_prepend.bin> $2
