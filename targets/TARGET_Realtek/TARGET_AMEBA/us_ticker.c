@@ -125,6 +125,7 @@ void us_ticker_set_interrupt(timestamp_t timestamp)
     if (time_def < TIMER_TICK_US) {
         time_def = TIMER_TICK_US;       // at least 1 tick
     }
+	HalTimerOp.HalTimerDis((u32)TimerAdapter.TimerId);
 	HalTimerOp.HalTimerReLoad((u32)TimerAdapter.TimerId, time_def);
 	HalTimerOp.HalTimerIrqEn((u32)TimerAdapter.TimerId);
 	HalTimerOp.HalTimerEn((u32)TimerAdapter.TimerId);
@@ -141,4 +142,3 @@ void us_ticker_clear_interrupt(void)
 {
     HalTimerOp.HalTimerIrqClear((u32)TimerAdapter.TimerId);
 }
-
