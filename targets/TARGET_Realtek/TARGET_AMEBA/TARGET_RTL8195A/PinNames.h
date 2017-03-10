@@ -164,6 +164,30 @@ typedef enum {
     DA_0  = (PORT_U<<4|0),
     DA_1  = (PORT_U<<4|1),
 
+      // Arduino connector namings
+
+    D0          = PA_6,
+    D1          = PA_7,
+    D2          = PA_5,
+    D3          = PD_4,
+    D4          = PD_5,
+    D5          = PA_4,
+    D6          = PA_3,
+    D7          = PA_2,
+    D8          = PB_4,
+    D9          = PB_5,
+    D10         = PC_0,
+    D11         = PC_2,
+    D12         = PC_3,
+    D13         = PC_1,
+    D14         = PB_3,
+    D15         = PB_2,
+    D16         = PA_1,
+    D17         = PA_0,
+    D18         = PE_1,
+    D19         = PE_5,
+
+
     // Generic signals namings
     LED1        = PB_4,
     LED2        = PB_5,
