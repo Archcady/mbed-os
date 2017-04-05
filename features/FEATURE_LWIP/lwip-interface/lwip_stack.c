@@ -87,6 +87,11 @@ static void mbed_lwip_arena_dealloc(struct lwip_socket *s)
 
 static void mbed_lwip_socket_callback(struct netconn *nc, enum netconn_evt eh, u16_t len)
 {
+    // Filter send minus events
+    if (eh == NETCONN_EVT_SENDMINUS && nc->state == NETCONN_WRITE) {
+        return;
+    }
+
     sys_prot_t prot = sys_arch_protect();
 
     for (int i = 0; i < MEMP_NUM_NETCONN; i++) {
@@ -444,7 +449,7 @@ nsapi_error_t mbed_lwip_bringup(bool dhcp, const char *ip, const char *netmask, 
   if (lwip_netif.mld_mac_filter != NULL) {
     ip6_addr_t ip6_allnodes_ll;
     ip6_addr_set_allnodes_linklocal(&ip6_allnodes_ll);
-    lwip_netif.mld_mac_filter(&lwip_netif, &ip6_allnodes_ll, MLD6_ADD_MAC_FILTER);
+    lwip_netif.mld_mac_filter(&lwip_netif, &ip6_allnodes_ll, NETIF_ADD_MAC_FILTER);
   }
 #endif /* LWIP_IPV6_MLD */
 
@@ -686,6 +691,7 @@ static nsapi_error_t mbed_lwip_socket_close(nsapi_stack_t *stack, nsapi_socket_t
 {
     struct lwip_socket *s = (struct lwip_socket *)handle;
 
+    netbuf_delete(s->buf);
     err_t err = netconn_delete(s->conn);
     mbed_lwip_arena_dealloc(s);
     return mbed_lwip_err_remap(err);
@@ -753,6 +759,8 @@ static nsapi_error_t mbed_lwip_socket_accept(nsapi_stack_t *stack, nsapi_socket_
     ip_addr_t peer_addr;
     (void) netconn_peer(ns->conn, &peer_addr, port);
     convert_lwip_addr_to_mbed(addr, &peer_addr);
+
+    netconn_set_nonblocking(ns->conn, true);
 
     return 0;
 }

@@ -58,7 +58,7 @@ class BuildApiTests(unittest.TestCase):
     @patch('tools.utils.run_cmd', return_value=("", "", 0))
     def test_always_complete_build(self, *_):
         with MagicMock() as notify:
-            toolchain = prepare_toolchain(self.src_paths, self.target,
+            toolchain = prepare_toolchain(self.src_paths, self.build_path, self.target,
                                           self.toolchain_name, notify=notify)
 
             res = scan_resources(self.src_paths, toolchain)
@@ -66,7 +66,7 @@ class BuildApiTests(unittest.TestCase):
             toolchain.RESPONSE_FILES=False
             toolchain.config_processed = True
             toolchain.config_file = "junk"
-            toolchain.compile_sources(res, self.build_path)
+            toolchain.compile_sources(res)
 
             assert any('percent' in msg[0] and msg[0]['percent'] == 100.0
                        for _, msg, _ in notify.mock_calls if msg)
@@ -81,12 +81,15 @@ class BuildApiTests(unittest.TestCase):
         :return:
         """
         app_config = "app_config"
-        mock_config_init.return_value = namedtuple("Config", "target")(
-            namedtuple("Target",
-                       "init_hooks name features core")(lambda _, __ : None,
-                                                        "Junk", [], "Cortex-M3"))
+        mock_target = namedtuple("Target",
+                                 "init_hooks name features core")(lambda _, __ : None,
+                                                                  "Junk", [], "Cortex-M3")
+        mock_config_init.return_value = namedtuple("Config",
+                                                   "target has_regions")(
+                                                       mock_target,
+                                                       False)
 
-        prepare_toolchain(self.src_paths, self.target, self.toolchain_name,
+        prepare_toolchain(self.src_paths, None, self.target, self.toolchain_name,
                           app_config=app_config)
 
         mock_config_init.assert_called_once_with(self.target, self.src_paths,
@@ -100,12 +103,15 @@ class BuildApiTests(unittest.TestCase):
         :param mock_config_init: mock of Config __init__
         :return:
         """
-        mock_config_init.return_value = namedtuple("Config", "target")(
-            namedtuple("Target",
-                       "init_hooks name features core")(lambda _, __ : None,
-                                                        "Junk", [], "Cortex-M3"))
+        mock_target = namedtuple("Target",
+                                 "init_hooks name features core")(lambda _, __ : None,
+                                                                  "Junk", [], "Cortex-M3")
+        mock_config_init.return_value = namedtuple("Config",
+                                                   "target has_regions")(
+                                                       mock_target,
+                                                       False)
 
-        prepare_toolchain(self.src_paths, self.target, self.toolchain_name)
+        prepare_toolchain(self.src_paths, None, self.target, self.toolchain_name)
 
         mock_config_init.assert_called_once_with(self.target, self.src_paths,
                                                  app_config=None)
@@ -127,6 +133,7 @@ class BuildApiTests(unittest.TestCase):
         app_config = "app_config"
         mock_exists.return_value = False
         mock_prepare_toolchain().link_program.return_value = 1, 2
+        mock_prepare_toolchain().config = namedtuple("Config", "has_regions")(None)
 
         build_project(self.src_paths, self.build_path, self.target,
                       self.toolchain_name, app_config=app_config)
@@ -154,6 +161,7 @@ class BuildApiTests(unittest.TestCase):
         mock_exists.return_value = False
         # Needed for the unpacking of the returned value
         mock_prepare_toolchain().link_program.return_value = 1, 2
+        mock_prepare_toolchain().config = namedtuple("Config", "has_regions")(None)
 
         build_project(self.src_paths, self.build_path, self.target,
                       self.toolchain_name)
