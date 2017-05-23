@@ -182,5 +182,8 @@
     },
     "M453VG6AE": {
         "OGChipSelectEditMenu": "M451AE series\tNuvoton M451AE series (M451AE,M452AE,M453AE,M451MAE)"
+    },
+    "REALTEK_RTL8195AM": {
+        "OGChipSelectEditMenu": "REALTEK_RTL8195AM\tRealtek REALTEK_RTL8195AM"
     }
 }
